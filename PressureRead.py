@@ -5,20 +5,25 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 def load_data(filepath):
-    return pd.read_csv(filepath, sep='\t', header=None, names=['Time', 'Pressure', 'Cycle'])
+    # Load data, treating blank values as NaN, then drop rows with NaN values
+    df = pd.read_csv(filepath, sep='\t', header=None, names=['Time', 'Pressure', 'Cycle'], na_values=[''])
+    df = df.dropna()
+    return df
 
 def filter_by_cycle(df, cycle_number):
     return df[df['Cycle'] == cycle_number]
 
 def update_plot(cycle_number, df, window, canvas, ax):
     df_cycle = filter_by_cycle(df, cycle_number)
-    df_cycle['Time'] = df_cycle['Time'] / 1000
+    # Use .loc to avoid SettingWithCopyWarning
+    df_cycle.loc[:, 'Time'] = df_cycle['Time'] / 1000
     ax.clear()
     ax.plot(df_cycle['Time'], df_cycle['Pressure'], label=f'Cycle {cycle_number}')
     ax.set_xlabel('Time (seconds)')
     ax.set_ylabel('Pressure')
     ax.legend()
     canvas.draw()
+
 
 def load_file(window):
     global df, canvas, ax
